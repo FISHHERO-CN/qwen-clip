@@ -89,17 +89,26 @@ class QwenCLIPNode:
                 self.model_thread.start()
 
                 # 等待模型加载完成
-                max_wait = 300  # 最多等待5分钟
+                max_wait = 600  # 最多等待10分钟 (增加等待时间以适应大型模型下载)
                 wait_time = 0
+                last_progress = 0
                 while not self.model_running and wait_time < max_wait:
                     time.sleep(1)
                     wait_time += 1
-                    if wait_time % 10 == 0:
-                        print(f"等待模型加载中... ({wait_time}s)")
+                    # 每5秒打印一次等待信息
+                    if wait_time % 5 == 0:
+                        progress = int(wait_time / max_wait * 100)
+                        if progress > last_progress:
+                            last_progress = progress
+                            print(f"等待模型加载中... ({wait_time}s, {progress}% 超时)")
 
                 if not self.model_running:
-                    error_msg = f"模型加载超时: {self.last_error if hasattr(self, 'last_error') else '未知错误'}"
+                    error_msg = f"模型加载超时或失败: {self.last_error if hasattr(self, 'last_error') else '未知错误'}"
                     raise Exception(error_msg)
+                    # 添加更多调试信息
+                    print(f"模型路径: {model_path}")
+                    print(f"当前工作目录: {os.getcwd()}")
+                    print(f"是否有权限访问该路径: {os.access(model_path, os.R_OK) if os.path.exists(model_path) else False}")
 
             # 准备图像
             # 将ComfyUI的IMAGE格式转换为PIL Image
@@ -113,6 +122,9 @@ class QwenCLIPNode:
                 prompt = "这是一张图片的描述，将用于AI大模型制作文生图或图生图。请先详细用中文描述这张图片，包括主体(含权重)+位置关系+细节+风格+其他要素，符合提示词习惯，然后用英文翻译同样的内容。请严格按照'中文：[内容]\n英文：[内容]'的格式输出。"
 
             # 生成提示词（一次调用）
+            if self.tokenizer is None:
+                raise Exception("模型tokenizer未加载成功，请检查模型路径和加载日志")
+            
             inputs = self.tokenizer.from_list_format([
                 {"image": img},
                 {"text": prompt},
