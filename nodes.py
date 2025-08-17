@@ -103,7 +103,8 @@ class QwenCLIPNode:
 
             # 准备图像
             # 将ComfyUI的IMAGE格式转换为PIL Image
-            img = Image.fromarray((image[0] * 255).astype('uint8'))
+            # 先将PyTorch张量转换为NumPy数组再使用astype
+            img = Image.fromarray((image[0] * 255).cpu().numpy().astype('uint8'))
 
             # 构造提示，要求同时输出中英文
             if mode == "simple":
