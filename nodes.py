@@ -48,17 +48,30 @@ class QwenCLIPNode:
             # 加载模型和tokenizer
             print(f"加载模型: {model_path}")
             print(f"开始加载tokenizer: {model_path}")
-            self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-            self.tokenizer_initialized = True
-            print(f"tokenizer加载完成")
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+                self.tokenizer_initialized = True
+                print(f"tokenizer加载完成")
+            except Exception as e:
+                tokenizer_error = f"tokenizer加载失败: {str(e)}"
+                print(tokenizer_error)
+                self.last_error = tokenizer_error
+                self.tokenizer_initialized = False
+                raise Exception(tokenizer_error)
             
             print(f"开始加载模型: {model_path}")
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                torch_dtype=torch.float16,
-                device_map="auto",
-                trust_remote_code=True
-            )
+            try:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    torch_dtype=torch.float16,
+                    device_map="auto",
+                    trust_remote_code=True
+                )
+            except Exception as e:
+                model_error = f"模型加载失败: {str(e)}"
+                print(model_error)
+                self.last_error = model_error
+                raise Exception(model_error)
             self.model.eval()
             self.current_model_path = model_path
             print("模型加载完成")
