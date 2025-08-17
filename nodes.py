@@ -15,6 +15,8 @@ class QwenCLIPNode:
         self.model_thread = None
         self.model_running = False
         self.current_model_path = "Qwen/Qwen-VL-Chat"
+        self.last_error = ""
+        self.tokenizer_initialized = False
 
     @classmethod
     def INPUT_TYPES(s):
@@ -45,7 +47,12 @@ class QwenCLIPNode:
 
             # 加载模型和tokenizer
             print(f"加载模型: {model_path}")
+            print(f"开始加载tokenizer: {model_path}")
             self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+            self.tokenizer_initialized = True
+            print(f"tokenizer加载完成")
+            
+            print(f"开始加载模型: {model_path}")
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_path,
                 torch_dtype=torch.float16,
@@ -103,12 +110,14 @@ class QwenCLIPNode:
                             print(f"等待模型加载中... ({wait_time}s, {progress}% 超时)")
 
                 if not self.model_running:
-                    error_msg = f"模型加载超时或失败: {self.last_error if hasattr(self, 'last_error') else '未知错误'}"
-                    raise Exception(error_msg)
-                    # 添加更多调试信息
+                    # 添加调试信息
                     print(f"模型路径: {model_path}")
                     print(f"当前工作目录: {os.getcwd()}")
                     print(f"是否有权限访问该路径: {os.access(model_path, os.R_OK) if os.path.exists(model_path) else False}")
+                    print(f"tokenizer初始化状态: {self.tokenizer_initialized}")
+                    
+                    error_msg = f"模型加载超时或失败: {self.last_error}"
+                    raise Exception(error_msg)
 
             # 准备图像
             # 将ComfyUI的IMAGE格式转换为PIL Image
@@ -122,8 +131,8 @@ class QwenCLIPNode:
                 prompt = "这是一张图片的描述，将用于AI大模型制作文生图或图生图。请先详细用中文描述这张图片，包括主体(含权重)+位置关系+细节+风格+其他要素，符合提示词习惯，然后用英文翻译同样的内容。请严格按照'中文：[内容]\n英文：[内容]'的格式输出。"
 
             # 生成提示词（一次调用）
-            if self.tokenizer is None:
-                raise Exception("模型tokenizer未加载成功，请检查模型路径和加载日志")
+            if self.tokenizer is None or not self.tokenizer_initialized:
+                raise Exception(f"模型tokenizer未加载成功或初始化失败，请检查模型路径和加载日志。tokenizer状态: {self.tokenizer is not None}, 初始化状态: {self.tokenizer_initialized}")
             
             inputs = self.tokenizer.from_list_format([
                 {"image": img},
