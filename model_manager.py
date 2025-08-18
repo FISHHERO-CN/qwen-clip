@@ -12,13 +12,13 @@ class ModelManager:
         self.model_configs = {
             "qwen-vl": {
                 "name": "Qwen-VL",
-                "url": "https://modelscope.cn/models/qwen/Qwen-VL/summary",
-                "files": ["config.json", "pytorch_model.bin", "tokenizer_config.json"]
+                "url": "https://huggingface.co/Qwen/Qwen-VL",
+                "files": ["config.json", "tokenizer_config.json", "pytorch_model.bin.index.json"] + [f"pytorch_model-0000{i}-of-00010.bin" for i in range(1, 11)]
             },
             "qwen-vl-chat": {
                 "name": "Qwen-VL-Chat",
-                "url": "https://modelscope.cn/models/qwen/Qwen-VL-Chat/summary",
-                "files": ["config.json", "pytorch_model.bin", "tokenizer_config.json"]
+                "url": "https://huggingface.co/Qwen/Qwen-VL-Chat",
+                "files": ["config.json", "tokenizer_config.json", "pytorch_model.bin.index.json"] + [f"pytorch_model-0000{i}-of-00010.bin" for i in range(1, 11)]
             }
         }
     
@@ -70,17 +70,61 @@ class ModelManager:
             )
             print(f"tokenizer配置已下载")
             
-            # 下载模型权重文件
+            # 下载模型索引文件
             self._download_file_with_resume(
-                f"https://huggingface.co/qwen/{model_name}/resolve/main/pytorch_model.bin",
-                os.path.join(model_path, "pytorch_model.bin")
+                f"https://huggingface.co/Qwen/{model_name}/resolve/main/pytorch_model.bin.index.json",
+                os.path.join(model_path, "pytorch_model.bin.index.json")
             )
-            print(f"模型权重文件已下载")
+            print(f"模型索引文件已下载")
+            
+            # 下载模型权重文件（分块）
+            for i in range(1, 11):
+                file_name = f"pytorch_model-0000{i}-of-00010.bin"
+                self._download_file_with_resume(
+                    f"https://huggingface.co/Qwen/{model_name}/resolve/main/{file_name}",
+                    os.path.join(model_path, file_name)
+                )
+                print(f"模型权重文件{i}已下载")
             
         except Exception as e:
-            raise Exception(f"""模型下载失败: {str(e)}
- 请确保您的网络连接正常，并且可以访问Hugging Face网站。
- 如果下载持续失败，您可以尝试手动下载模型文件并放置到 {model_path} 目录下。""")
+            # 尝试使用国内镜像
+            try:
+                print(f"尝试使用国内镜像下载...")
+                # 下载配置文件
+                self._download_file_with_resume(
+                    f"https://hf-mirror.com/Qwen/{model_name}/raw/main/config.json",
+                    os.path.join(model_path, "config.json")
+                )
+                print(f"配置文件已下载")
+                
+                # 下载tokenizer配置
+                self._download_file_with_resume(
+                    f"https://hf-mirror.com/Qwen/{model_name}/raw/main/tokenizer_config.json",
+                    os.path.join(model_path, "tokenizer_config.json")
+                )
+                print(f"tokenizer配置已下载")
+                
+                # 下载模型索引文件
+                self._download_file_with_resume(
+                    f"https://hf-mirror.com/Qwen/{model_name}/resolve/main/pytorch_model.bin.index.json",
+                    os.path.join(model_path, "pytorch_model.bin.index.json")
+                )
+                print(f"模型索引文件已下载")
+                
+                # 下载模型权重文件（分块）
+                for i in range(1, 11):
+                    file_name = f"pytorch_model-0000{i}-of-00010.bin"
+                    self._download_file_with_resume(
+                        f"https://hf-mirror.com/Qwen/{model_name}/resolve/main/{file_name}",
+                        os.path.join(model_path, file_name)
+                    )
+                    print(f"模型权重文件{i}已下载")
+            except Exception as e2:
+                error_msg = f"模型下载失败: {str(e2)}"
+                error_msg += "\n请确保您的网络连接正常，并且可以访问Hugging Face网站或国内镜像。"
+                error_msg += "\n如果下载持续失败，您可以尝试手动下载模型文件并放置到 {model_path} 目录下。"
+                error_msg += f"\n模型下载地址: https://huggingface.co/Qwen/{model_name}"
+                raise Exception(error_msg)
 
         return model_path
     

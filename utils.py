@@ -34,12 +34,13 @@ class ImageCaptionGenerator:
                 try:
                     # 尝试使用auto设备映射
                     self.model = AutoModelForCausalLM.from_pretrained(
-                        model_path, 
-                        device_map="auto", 
-                        offload_folder=offload_folder,  # 指定卸载文件夹
-                        torch_dtype=torch.float16,  # 使用半精度浮点数减少内存使用
-                        trust_remote_code=True
-                    ).eval()
+                            model_path, 
+                            device_map="auto", 
+                            offload_folder=offload_folder,  # 指定卸载文件夹
+                            torch_dtype=torch.float16,  # 使用半精度浮点数减少内存使用
+                            trust_remote_code=True,
+                            use_safetensors=True
+                        ).eval()
                     print(f"模型已加载，设备映射: auto")
                 except Exception as e:
                     # 如果auto设备映射失败，尝试使用cpu
@@ -49,7 +50,8 @@ class ImageCaptionGenerator:
                             model_path, 
                             device_map="cpu", 
                             torch_dtype=torch.float16,  # 使用半精度浮点数减少内存使用
-                            trust_remote_code=True
+                            trust_remote_code=True,
+                            use_safetensors=True
                         ).eval()
                         print(f"模型已加载，设备映射: cpu")
                     else:
@@ -71,11 +73,12 @@ class ImageCaptionGenerator:
                     try:
                         # 尝试使用auto设备映射
                         self.model = AutoModelForCausalLM.from_pretrained(
-                            f"qwen/{model_name}", 
+                            f"Qwen/{model_name}", 
                             device_map="auto", 
                             offload_folder=offload_folder,  # 指定卸载文件夹
                             torch_dtype=torch.float16,  # 使用半精度浮点数减少内存使用
-                            trust_remote_code=True
+                            trust_remote_code=True,
+                            use_safetensors=True
                         ).eval()
                         print(f"模型已从Hugging Face Hub加载，设备映射: auto")
                     except Exception as e:
@@ -83,11 +86,12 @@ class ImageCaptionGenerator:
                         if "device string: disk" in str(e):
                             print(f"自动设备映射失败，尝试使用CPU: {str(e)}")
                             self.model = AutoModelForCausalLM.from_pretrained(
-                                f"qwen/{model_name}", 
-                                device_map="cpu", 
-                                torch_dtype=torch.float16,  # 使用半精度浮点数减少内存使用
-                                trust_remote_code=True
-                            ).eval()
+                            f"Qwen/{model_name}", 
+                            device_map="cpu", 
+                            torch_dtype=torch.float16,  # 使用半精度浮点数减少内存使用
+                            trust_remote_code=True,
+                            use_safetensors=True
+                        ).eval()
                             print(f"模型已从Hugging Face Hub加载，设备映射: cpu")
                         else:
                             raise e
