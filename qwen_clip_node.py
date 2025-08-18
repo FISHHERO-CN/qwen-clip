@@ -14,17 +14,12 @@ class QwenClipNode:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "model_type": (["qwen-vl", "qwen-vl-chat", "custom"], {
-                    "default": "qwen-vl"
-                })
-            },
-            "optional": {
-                "custom_model_path": ("STRING", {
-                    "default": "",
-                    "multiline": False
-                })
+                "model_type": (["qwen2.5-vl-7b-instruct", "custom"], {
+                    "default": "qwen2.5-vl-7b-instruct"
+                })    
             }
-        }
+        }       
+        
 
     RETURN_TYPES = ("STRING", "STRING")
     RETURN_NAMES = ("caption_chinese", "caption_english")

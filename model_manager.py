@@ -10,15 +10,10 @@ class ModelManager:
         
         # 模型配置
         self.model_configs = {
-            "qwen-vl": {
-                "name": "Qwen-VL",
-                "url": "https://huggingface.co/Qwen/Qwen-VL",
-                "files": ["config.json", "tokenizer_config.json", "pytorch_model.bin.index.json"] + [f"pytorch_model-0000{i}-of-00010.bin" for i in range(1, 11)]
-            },
-            "qwen-vl-chat": {
-                "name": "Qwen-VL-Chat",
-                "url": "https://huggingface.co/Qwen/Qwen-VL-Chat",
-                "files": ["config.json", "tokenizer_config.json", "pytorch_model.bin.index.json"] + [f"pytorch_model-0000{i}-of-00010.bin" for i in range(1, 11)]
+            "qwen2.5-vl-7b-instruct": {
+                "name": "Qwen2.5-VL-7B-Instruct",
+                "url": "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct",
+                "files": ["config.json", "tokenizer_config.json", "model.safetensors.index.json"] + [f"model-0000{i}-of-00005.safetensors" for i in range(1, 6)]
             }
         }
     
@@ -71,15 +66,17 @@ class ModelManager:
             print(f"tokenizer配置已下载")
             
             # 下载模型索引文件
+            index_file = model_config['files'][2]  # 索引文件是files列表中的第三个元素
             self._download_file_with_resume(
-                f"https://huggingface.co/Qwen/{model_name}/resolve/main/pytorch_model.bin.index.json",
-                os.path.join(model_path, "pytorch_model.bin.index.json")
+                f"https://huggingface.co/Qwen/{model_name}/resolve/main/{index_file}",
+                os.path.join(model_path, index_file)
             )
             print(f"模型索引文件已下载")
             
             # 下载模型权重文件（分块）
-            for i in range(1, 11):
-                file_name = f"pytorch_model-0000{i}-of-00010.bin"
+            # 权重文件是files列表中从第四个元素开始的所有元素
+            weight_files = model_config['files'][3:]
+            for i, file_name in enumerate(weight_files, 1):
                 self._download_file_with_resume(
                     f"https://huggingface.co/Qwen/{model_name}/resolve/main/{file_name}",
                     os.path.join(model_path, file_name)
@@ -105,15 +102,17 @@ class ModelManager:
                 print(f"tokenizer配置已下载")
                 
                 # 下载模型索引文件
+                index_file = model_config['files'][2]  # 索引文件是files列表中的第三个元素
                 self._download_file_with_resume(
-                    f"https://hf-mirror.com/Qwen/{model_name}/resolve/main/pytorch_model.bin.index.json",
-                    os.path.join(model_path, "pytorch_model.bin.index.json")
+                    f"https://hf-mirror.com/Qwen/{model_name}/resolve/main/{index_file}",
+                    os.path.join(model_path, index_file)
                 )
                 print(f"模型索引文件已下载")
                 
                 # 下载模型权重文件（分块）
-                for i in range(1, 11):
-                    file_name = f"pytorch_model-0000{i}-of-00010.bin"
+                # 权重文件是files列表中从第四个元素开始的所有元素
+                weight_files = model_config['files'][3:]
+                for i, file_name in enumerate(weight_files, 1):
                     self._download_file_with_resume(
                         f"https://hf-mirror.com/Qwen/{model_name}/resolve/main/{file_name}",
                         os.path.join(model_path, file_name)

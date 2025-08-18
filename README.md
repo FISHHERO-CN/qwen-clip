@@ -61,7 +61,7 @@ pip install -r requirements.txt
    - 可以通过`custom_model_path`参数指定本地模型路径
 
 3. **节点参数**：
-   - `model_type`: 模型类型（qwen-vl, qwen-vl-chat, custom）
+   - `model_type`: 模型类型（qwen2.5-vl-7b-instruct, custom）
    - `output_language`: 输出语言（zh-CN, en-US）
    - `detail_level`: 详细程度（simple, detailed）
    - `custom_model_path`: 自定义模型路径（可选）
